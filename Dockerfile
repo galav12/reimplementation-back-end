@@ -1,24 +1,39 @@
-FROM ruby:3.2.7
+ARG RUBY_VERSION=3.2.7
+FROM ruby:$RUBY_VERSION
 
-LABEL maintainer="Ankur Mundra <ankurmundra0212@gmail.com>"
 # Install dependencies
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get install -y netcat-openbsd
+RUN apt-get update -qq && \
+    apt-get install -y \
+    build-essential \
+    libvips \
+    nodejs \
+    npm \
+    default-mysql-client \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man
 
-# Set the working directory
 WORKDIR /app
 
-# Copy your application files from current location to WORKDIR
+# Install gems
+COPY Gemfile Gemfile.lock ./
+RUN gem install bundler && \
+    bundle install --without development test
+
+# Copy application
 COPY . .
 
-# Install Ruby dependencies
-RUN gem update --system && gem install bundler:2.4.7
-RUN bundle install
+# Precompile assets
+# RUN bundle exec rails assets:precompile
 
-EXPOSE 3002 
+# Set production environment
+ENV RAILS_ENV=development
+ENV RAILS_LOG_TO_STDOUT="1" \
+    RAILS_SERVE_STATIC_FILES="true"
 
-# Set the entry point
-ENTRYPOINT ["/app/setup.sh"]
+EXPOSE 3002
+
+# Add entrypoint for DB setup
+COPY entrypoint.sh /usr/bin/
+RUN chmod +x /usr/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["rails", "server", "-b", "0.0.0.0", "-p", "3002"]
