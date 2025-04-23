@@ -37,22 +37,32 @@ class AuthenticationController < ApplicationController
       end
     end
     
-    user = User.find_by(name: params[:user_name]) || User.find_by(email: params[:user_name])
+    user = User.find_by(email: params[:email])
     
     if user&.authenticate(params[:password])
       # Reset counters on successful login
       LOGIN_ATTEMPTS[ip] = { count: 0, timestamp: Time.now } if LOGIN_ATTEMPTS[ip]
       LOGIN_ATTEMPTS[username] = { count: 0, timestamp: Time.now } if LOGIN_ATTEMPTS[username]
       
-      payload = { 
+      token = JsonWebToken.encode(
         id: user.id, 
-        name: user.name, 
-        full_name: user.full_name, 
-        role: user.role.name,
-        institution_id: user.institution.id 
-      }
-      token = JsonWebToken.encode(payload, 24.hours.from_now)
-      render json: { token: }, status: :ok
+        jwt_version: user.jwt_version,
+        exp: 24.hours.from_now.to_i  # Add expiration
+      )
+      refresh_token = JsonWebToken.encode(
+        id: user.id,
+        exp: 7.days.from_now.to_i
+      )
+      render json: {
+        token: token,
+        refresh_token: refresh_token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role.name
+        }
+      }, status: :ok
     else
       # Only increment counters for non-localhost requests
       unless is_localhost

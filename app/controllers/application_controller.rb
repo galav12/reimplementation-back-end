@@ -3,5 +3,4 @@ class ApplicationController < ActionController::API
   include JwtToken
   
   before_action :authorize
-
 end

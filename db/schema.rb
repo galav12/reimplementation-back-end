@@ -382,8 +382,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_22_221322) do
     t.bigint "institution_id"
     t.bigint "role_id", null: false
     t.bigint "parent_id"
-    t.string "reset_password_token"
-    t.datetime "reset_password_sent_at"
     t.string "jwt_version"
     t.string "time_zone"
     t.string "language"

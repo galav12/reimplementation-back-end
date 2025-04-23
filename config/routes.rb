@@ -9,6 +9,9 @@ Rails.application.routes.draw do
   post '/login', to: 'authentication#login'
   namespace :api do
     namespace :v1 do
+      post 'auth/login', to: 'authentication#login'
+      post 'auth/refresh', to: 'authentication#refresh'
+      post 'auth/logout', to: 'authentication#logout'
       resources :institutions
       resources :roles do
         collection do
