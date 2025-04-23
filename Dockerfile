@@ -9,6 +9,7 @@ RUN apt-get update -qq && \
     nodejs \
     npm \
     default-mysql-client \
+    redis-tools \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man
 
@@ -22,9 +23,6 @@ RUN gem install bundler && \
 # Copy application
 COPY . .
 
-# Precompile assets
-# RUN bundle exec rails assets:precompile
-
 # Set production environment
 ENV RAILS_ENV=development
 ENV RAILS_LOG_TO_STDOUT="1" \
@@ -35,5 +33,5 @@ EXPOSE 3002
 # Add entrypoint for DB setup
 COPY entrypoint.sh /usr/bin/
 RUN chmod +x /usr/bin/entrypoint.sh
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["rails", "server", "-b", "0.0.0.0", "-p", "3002"]
